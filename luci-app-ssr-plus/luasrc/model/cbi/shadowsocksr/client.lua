@@ -3,11 +3,11 @@
 -- Licensed to the public under the GNU General Public License v3.
 
 local m, s, sec, o
-local uci = luci.model.uci.cursor()
+local uci = require "luci.model.uci".cursor()
 
 local validation = require "luci.cbi.datatypes"
 local function is_finded(e)
-	return luci.sys.exec('type -t -p "%s"' % e) ~= "" and true or false
+	return luci.sys.exec(string.format('type -t -p "%s" 2>/dev/null', e)) ~= ""
 end
 
 m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"), translate("<h3>Support SS/SSR/V2RAY/XRAY/TROJAN/NAIVEPROXY/SOCKS5/TUN etc.</h3>"))
@@ -87,6 +87,10 @@ o.default = gfw
 o = s:option(ListValue, "dports", translate("Proxy Ports"))
 o:value("1", translate("All Ports"))
 o:value("2", translate("Only Common Ports"))
+o:value("3", translate("Custom Ports"))
+cp = s:option(Value, "custom_ports", translate("Enter Custom Ports"))
+cp:depends("dports", "3")  -- 仅当用户选择“Custom Ports”时显示
+cp.placeholder = "e.g., 80,443,8080"
 o.default = 1
 
 o = s:option(ListValue, "pdnsd_enable", translate("Resolve Dns Mode"))
@@ -130,7 +134,7 @@ o.description = translate("Custom DNS Server for mosdns")
 o = s:option(Flag, "mosdns_ipv6", translate("Disable IPv6 in MOSDNS query mode"))
 o:depends("pdnsd_enable", "3")
 o.rmempty = false
-o.default = "0"
+o.default = "1"
 
 if is_finded("chinadns-ng") then
 	o = s:option(Value, "chinadns_forward", translate("Domestic DNS Server"))
